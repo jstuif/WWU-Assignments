@@ -1,2 +1,2 @@
 # WWU-Assignments
-Programming and scripting assignements from multiple classes.
+Programming and scripting assignments from multiple classes.
