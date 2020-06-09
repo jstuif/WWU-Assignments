@@ -1,0 +1,192 @@
+/*
+Joshua Stuifbergen
+10/15/18
+Lab3 Bitwise Logical Operations
+*/
+
+#include <stdio.h>
+
+int andFunct(int a, int b){
+	//printf("%i, %i\n", a, b);
+	//c is for check
+	int c = a & b;
+	int andTotal = ~(~a | ~b);
+	//printf("%i is the check and %i is the answer\n", c, andTotal);
+	return printf("Bit-wise AND of %i and %i with check %i and answer: %i\n"	, a, b, c, andTotal);
+}
+
+int xorFunct(int e, int f){
+	// g is for check
+	int g = e ^ f;
+	int xorTotal = (~(~e & ~f) & ~(e & f)) ;
+	//printf("%i is the check and %i is the answer\n", g, xorTotal); 
+	return printf("Bit-wise XOR of %i and %i with check %i and answer: %i\n"	, e, f, g, xorTotal);
+}
+
+
+int oneOdd (int c){
+	//128 64 32 16 8 4 2 1
+	// 170
+	// 1  0  1  0  1 0 1 0 
+	//The mask provides a 8 bit odd comparison
+	int mask = 170; //AA
+	//printf("c is : %i\n", c);
+	int q = mask & c;
+	//printf("mask at %i is %i\n", c, q);
+	int w = (c >> 8) & mask;
+	//printf("%i\n", w);	
+	int e = (c >> 16) & mask;
+	//printf("%i\n", e);
+	int r = (c >> 24) & mask;
+	//printf("%i\n", r);
+	int ty = q + w + e + r;
+	//printf("Total after qwer is : %i\n", ty);
+		
+	//printf("!(!ty) is :  %i\n", !(!ty));
+	return printf("%i oneOdd is : %i\n", c, !(!ty));
+}
+
+int allOdd(int d){
+	//printf("%i", d);
+	int mask = 170;
+	//printf("Mask intially is: %i\n", mask);	
+	
+	int w = (d & mask);
+	//printf("w : %i\n", w);
+	int x = (d >> 8) & mask;
+	//mask = w;
+	//printf("x : %i\n", x);
+	int y = (d >> 16) & mask;
+	//printf("%i\n", mask);
+	//mask = x;
+	//printf("mask after 2nd &<<8 : %i\n", mask);
+	int z = (d >> 24) & mask;
+	//printf("%i\n", mask); 
+	//mask = y;
+	//printf("mask after 3rd &<< 16 : %i\n", mask);
+	
+	
+	/* //printf("%i", d);
+        int mask = 170;
+        //printf("Mask intially is: %i\n", mask);       
+        int w = (d << 8) & mask;
+        mask = w;
+        //printf("mask after 1st & : %i\n", mask);
+        int x = (d << 16) & mask;
+        //printf("%i\n", mask);
+        mask = x;
+        //printf("mask after 2nd &<<8 : %i\n", mask);
+        int y = (d << 24) & mask;
+        //printf("%i\n", mask); 
+        mask = y;
+        //printf("mask after 3rd &<< 16 : %i\n", mask);*/
+	// 
+		
+	int answer;	
+	answer = (((((w << 8) | x) << 8) | y) << 8) | z;
+	//printf("%x\n", answer);
+	//          AA 00 << 8   w
+	//          00 AA |      x
+	//          AA AA =  
+	//       AA AA 00 << 8
+	//       00 00 AA |      y
+	//       AA AA AA =
+	//    AA AA AA 00 << 8  
+	//    00 00 00 AA |      z
+	//    AA AA AA AA =
+	//    
+	//        	
+ 	int ax8Mask;
+	ax8Mask = (((((mask << 8) | mask) << 8) | mask) << 8) | mask;
+	//printf("%x\n", ax8Mask);
+
+	
+	return printf("%x allOdd is : %i\n", d, (!((~answer) & ax8Mask)));
+}
+
+
+
+int swapByte(int e, int f, int g){
+	int mask = 255;
+	int num = e;
+	/*int w = (e & mask);
+	printf("%x\n", w);
+	int x = ((e >> 8) & mask);
+	printf("%x\n", x);
+	int y = ((e >> 16) & mask);
+	printf("%x\n", y);
+	int z = ((e >> 24) & mask);
+	printf("%x\n", z);*/
+	//return 0;	
+	
+	// 0 << 3 = 0
+	// 1 << 3 = 8
+	// 2 << 3 = 16
+	// 3 << 3 = 24
+	
+	
+	/*int shiftByte = f << 3;
+	//f is 1 and g is 3. shiftByte becomes 4
+	//temp1 get shift value from f to g
+	int temp1 = (mask << (shiftByte));
+	//temp2 moves f byte to g byte
+	int temp2 = (g << (shiftByte));
+ 	//temp1 negated in order to AND at new byte location
+	//value produced is all weird, I need to shift
+	//back right. Missing the step to get g to f also.
+	return printf("%i\n", ((~temp2 & e) | temp1));*/
+	
+	//How it should swap.
+	//12 34 56 78
+	//56 34 12 78
+	
+	//Both shiftF + shiftG specify the byte to switch with,
+	// moving that byte closest to little endian 
+	int shiftF = (f << 3); //f(1) = 8
+	//printf("shiftF length is: %i\n", shiftF);
+	int shiftG = (g << 3); //g(3) = 24
+	//printf("shiftG length is: %i\n", shiftG);
+	
+	//andF + andG both AND'd to isolate the opposite byte
+	//00 12 34 56
+	//00 00 00 FF  = 56
+	int andF = (num >> shiftF) & mask;
+	// printf("andF byte is: %x\n", andF);
+
+	//00 00 00 12
+	//00 00 00 FF = 12 
+	int andG = (num >> shiftG) & mask;  
+	// printf("andG byte is: %x\n", andG);
+	
+	//puts the swapped bytes together: 56 00 12 00
+	//int placeGF = (andF << shiftG) | (andG << shiftF);
+		
+	//Need to get matching bytes zeroed out in num(e)
+	//num = ((~num) ^ num) 	 
+	/*12 34 56 78        12 34 56 78
+	//00 00 00 12        12 12 12 12 &
+		   = 12 10 12 10   		
+	*/
+	
+	return printf("%x swaps %x with %x to make: %x\n", e, andF, andG,
+	 (num |= ((andF << shiftG) | (andG << shiftF))));	
+}
+
+
+
+int main(){
+	andFunct(100000, 6);
+
+	xorFunct(0, 10000);	
+
+	oneOdd(0x0);
+	oneOdd(0x999);
+		
+	allOdd(0xAAAAAAAA);
+	allOdd(0xFFFFFFFD);
+
+	swapByte(0x8, 1, 1);
+	swapByte(0x1, 0, 5);
+	
+	return 0;
+}
