@@ -1,0 +1,87 @@
+#!/bin/bash
+
+#Joshua Stuifbergen
+#Assignment 1 Bash 
+#CISS 360
+#1/22/19
+
+#The program searches the auth.log and returns to stderr lines from it that contain 
+#matches of the two user chosen words
+
+
+cd /var/log
+
+echo "-------A1Bash Script-------"
+echo
+
+#Lists the current users in order to assist 
+#with determining what user to enter later on
+ 
+echo "Current connected users:"
+loginctl list-sessions
+echo
+
+
+#The logView function prints out the lines from auth.log
+#that contain the two grep parameters
+logView(){
+	echo "Type a username from above to view their actions: "
+	read userName
+	echo
+	echo "Enter an keyword found in the auth.log: ex. login or FAILED"
+	read keyWord
+	echo
+	#If user hits Enter for either the keyWord or userName, then
+	#function will exit
+	if [ -z "$keyWord" ] || [ -z "$userName" ]; then
+		
+		echo "A1Bash Program Error: Must enter username and/or keyword"	
+		echo "logView function failed to complete"
+		perror -v $?
+		echo "Failure:" exit 1 
+	else 
+		grep --color "$userName" auth.log | grep --color "$keyWord"
+	fi
+
+	echo
+	echo 
+	echo "Do you want to do a search in auth.log?"
+	echo "If yes type y to continue, else n to exit."
+	read answer
+}
+
+#The user is asked if they want to search the auth.log. 
+#If no then it ends the program.
+#If yes it goes through the while loop
+echo "Do you want to do a search in auth.log?"
+echo "If yes type y to continue, else n to exit."
+read answer
+echo
+
+if [ "$answer" == "n" ]; then
+	perror -v $?
+	echo "Exit Success:" exit $?
+fi
+
+#While loops runs until the user choose 'n' or chooses something other than 'y'
+while [ "$answer" != "n" ]; do
+	if [ "$answer" == "y" ]; then
+		logView
+	elif [ "$answer" != "y" ] || [ -z "$answer" ]; then
+		echo
+		perror -v $?
+		echo "Failure:" exit 1 
+		echo "A1Bash Program Error: Must enter y or n"	
+		echo "logView function failed to complete"	
+		exit 1		
+		#echo "Please type y to continue, else n to exit.2"
+		#read answer
+		#continue
+	fi
+
+	echo
+	perror -v $?
+	echo "Exit Success:" exit $?
+done
+	
+echo "End of Program"
