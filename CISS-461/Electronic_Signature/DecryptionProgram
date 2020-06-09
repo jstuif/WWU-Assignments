@@ -1,0 +1,84 @@
+#!/bin/bash
+
+#Joshua Stuifbergen
+#4/9/19
+#Assignment 2 - Electronic Signatures
+
+#Decryption Program
+
+echo "**********Decryption Program**********"
+echo
+echo "List of files available to decrypt: "
+echo "perezom.txt"
+echo "silvesd.txt"
+echo "snyder7.txt"
+echo "tranerj.txt"
+echo "volosin.txt"
+echo "warren3.txt"
+echo
+	
+read -p "Enter the name of the file you want to decrypt, <username>.txt: " filename
+echo "The file " $filename " will be decrypted."
+echo
+	
+#Parsing the encrypted key
+cat $filename | sed -n '/.*stuifbj/,/==/p' > tempfile
+cat tempfile | cut -d " " -f2 | sed '/ ./,/==/p' > RandomEncKey.enc
+
+#Parsing the encrypted text
+sed -n '/stuifbj/,/--/p' $filename | sed -n '/.*++/,/--/{/--/!p}' | sed 's/++//' | grep -v -e '^[[:space:]]*$'> EncryptedData.enc
+
+#Parsing the hash
+sed -n '/stuifbj/,/'\n'==/p' $filename | sed -n '/--/,/==/p' | sed 's/-- //' | sed '1,/==/!d' > EncryptedHash.enc
+
+#Decrypting the key.
+#Decodes the key to base64. 
+openssl base64 -d -in RandomEncKey.enc -out RandomDecKey.enc	
+#Decrypts the key with my private public key
+openssl rsautl -decrypt -inkey rsa_private.pem -in RandomDecKey.enc -out newkey.bin	
+
+#decrypt the data (EncryptedData.enc) with the binery decrypted key (newkey.bin)
+echo "*************************************************************"
+echo "Decryption method will use md5 for early OpenSSL versions"
+echo "or sha256 for the newest version 1.1.0g.***"
+echo
+echo "Ignore the 'bad decrypt' message below if"
+echo "afterwards a readable bas64 text is outputted.***"
+echo "*************************************************************"
+echo
+
+#Decrypting the data
+#Decodes the encrypted data to base64
+openssl base64 -d -in EncryptedData.enc -out EncryptedDataDec.enc
+#Decrypts the base64 encrypted data using the decrypted key
+#The standard for OpenSSL 1.1.0g
+openssl enc -d -nosalt -aes-256-cbc -in EncryptedDataDec.enc -pass file:./newkey.bin -out DecryptedData 
+#OpenSSL 1.0.2g
+openssl enc -d -nosalt -aes-256-cbc -md md5 -in EncryptedDataDec.enc -pass file:./newkey.bin -out DecryptedData2 
+echo
+echo "Decrypted Data: "
+cat DecryptedData
+echo
+
+#The variable namevar will match the name of the public key from whom the data was received from
+read -p "Enter username of the same file with the format, <username>_rsa.pub.pem: " namevar
+#echo $namevar
+echo
+echo "*****************************************************************"
+echo "There must be one 'Verified OK' to confirm that the hash matches"
+echo "*****************************************************************"
+echo
+
+#Verifying the hash. 
+#Convert from base64 to binary.
+openssl base64 -d -in EncryptedHash.enc -out /tmp/sign.sha256
+#The standard for OpenSSL 1.1.0g
+echo "Hash verification check for OpenSSL 1.1.0g using sha256 decryption"
+openssl dgst -sha256 -verify  $namevar -signature /tmp/sign.sha256 DecryptedData
+echo
+#The standard for OpenSSL 1.0.2g
+echo "Hash verification check for OpenSSL 1.0.2g using md5 decryption"
+openssl dgst -sha256 -verify  $namevar -signature /tmp/sign.sha256 DecryptedData2
+
+echo
+echo "Your decrypted data is stored in the file, DecryptedData"
